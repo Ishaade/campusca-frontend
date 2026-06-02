@@ -232,13 +232,6 @@ function TeacherDashboard() {
                 >
                   View Analytics
                 </button>
-                  <button
-                    onClick={() => navigate('/teacher/migration')}
-                    className="btn btn-warning"
-                    title="Run migration to import local client data to the server"
-                  >
-                    Run Migration
-                  </button>
               </div>
             </div>
           </div>

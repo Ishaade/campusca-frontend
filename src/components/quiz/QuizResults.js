@@ -43,7 +43,8 @@ function QuizResults() {
         // fetch room info (optional, for roomCode)
         try {
           const fetchedRoom = await apiRequest(`/api/rooms/${roomId}`);
-          if (fetchedRoom?.code) setRoomCode(fetchedRoom.code);
+          const room = fetchedRoom?.room || fetchedRoom;
+          if (room?.code) setRoomCode(room.code);
         } catch (e) {
           // ignore; room code is optional
         }
@@ -100,12 +101,22 @@ function QuizResults() {
     let pointsEarned = 0;
 
     if (question.type === 'multiple-choice' || question.type === 'true-false') {
-      isCorrect = parseInt(userAnswer) === question.correctAnswer;
-      pointsEarned = isCorrect ? question.points : 0;
+      if (question.type === 'multiple-choice') {
+        isCorrect = Number(userAnswer) === Number(question.correctAnswer);
+        pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
+      } else {
+        const normalizeBool = (value) => {
+          if (typeof value === 'boolean') return value;
+          if (typeof value === 'string') return value.toLowerCase() === 'true' || value === '1';
+          return Boolean(value);
+        };
+        isCorrect = normalizeBool(userAnswer) === normalizeBool(question.correctAnswer);
+        pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
+      }
     } else if (question.type === 'short-answer') {
       // For short answer, check if answer was provided
       isCorrect = userAnswer && userAnswer.trim().length > 0;
-      pointsEarned = isCorrect ? question.points : 0;
+      pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
     }
 
     return { isCorrect, pointsEarned, userAnswer };
@@ -290,14 +301,22 @@ function QuizResults() {
                         <div>
                           <p className="text-sm font-medium text-gray-700 mb-1">Your Answer:</p>
                           <div className="p-2 bg-white rounded border">
-                            {parseInt(questionResult.userAnswer) === 0 ? 'True' : 'False'}
+                            {(() => {
+                              const v = questionResult.userAnswer;
+                              const b = typeof v === 'boolean' ? v : typeof v === 'string' ? (v.toLowerCase() === 'true' || v === '1') : Boolean(v);
+                              return b ? 'True' : 'False';
+                            })()}
                           </div>
                         </div>
                         {!questionResult.isCorrect && (
                           <div>
                             <p className="text-sm font-medium text-green-700 mb-1">Correct Answer:</p>
                             <div className="p-2 bg-green-100 rounded border border-green-300">
-                              {question.correctAnswer === 0 ? 'True' : 'False'}
+                              {(() => {
+                                const v = question.correctAnswer;
+                                const b = typeof v === 'boolean' ? v : typeof v === 'string' ? (v.toLowerCase() === 'true' || v === '1') : Boolean(v);
+                                return b ? 'True' : 'False';
+                              })()}
                             </div>
                           </div>
                         )}

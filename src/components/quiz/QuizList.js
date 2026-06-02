@@ -35,7 +35,8 @@ function QuizList() {
           // ignore, room may not be directly accessible
         }
 
-        if (foundRoom?.code) setRoomCode(foundRoom.code);
+        const roomObj = foundRoom?.room || foundRoom;
+        if (roomObj?.code) setRoomCode(roomObj.code);
 
         // For each quiz, fetch attempts and determine user's completion
         const quizzesWithStatus = await Promise.all((roomQuizzes || []).map(async (quiz) => {

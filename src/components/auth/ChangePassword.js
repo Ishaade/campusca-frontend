@@ -1,42 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:4000';
-
 function ChangePassword() {
-  const { apiRequest } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { apiRequest, user } = useAuth();
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [limitInfo, setLimitInfo] = useState(null);
 
-  const fetchLimitInfo = async (value) => {
-    if (!value) {
-      setLimitInfo(null);
-      return;
-    }
+  const fetchLimitInfo = async () => {
     try {
-      const res = await fetch(
-        `${API_BASE_URL}/api/auth/student/password-change-info?email=${encodeURIComponent(value)}`
-      );
-      const data = await res.json();
-      if (res.ok) {
-        setLimitInfo(data);
-      } else {
-        setLimitInfo(null);
-      }
+      const data = await apiRequest('/api/auth/student/password-change-info');
+      setLimitInfo(data);
     } catch {
       setLimitInfo(null);
     }
   };
 
-  const handleEmailBlur = () => {
-    fetchLimitInfo(email.trim());
-  };
+  useEffect(() => {
+    fetchLimitInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,7 +32,7 @@ function ChangePassword() {
     setError('');
     setSuccess('');
 
-    if (password !== confirmPassword) {
+    if (newPassword !== confirmPassword) {
       setError('Passwords do not match');
       setLoading(false);
       return;
@@ -59,12 +47,13 @@ function ChangePassword() {
     try {
       const data = await apiRequest('/api/auth/student/change-password', {
         method: 'POST',
-        body: JSON.stringify({ email: email.trim(), password })
+        body: JSON.stringify({ currentPassword, newPassword })
       });
       setSuccess(data?.message || 'Password changed successfully.');
-      setPassword('');
+      setCurrentPassword('');
+      setNewPassword('');
       setConfirmPassword('');
-      await fetchLimitInfo(email.trim());
+      await fetchLimitInfo();
     } catch (err) {
       setError(err?.message || 'Could not change password.');
     } finally {
@@ -78,7 +67,7 @@ function ChangePassword() {
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">Change password</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Students only. Enter your email and new password.
+            Students only. Logged in as {user?.email}.
           </p>
         </div>
 
@@ -105,30 +94,30 @@ function ChangePassword() {
             )}
 
             <div className="form-group">
-              <label htmlFor="email" className="form-label">Student email</label>
+              <label htmlFor="currentPassword" className="form-label">Current password</label>
               <input
-                id="email"
-                name="email"
-                type="email"
+                id="currentPassword"
+                name="currentPassword"
+                type="password"
+                minLength={6}
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={handleEmailBlur}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 className="form-input"
-                placeholder="you@school.edu"
+                placeholder="Enter current password"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="password" className="form-label">New password</label>
+              <label htmlFor="newPassword" className="form-label">New password</label>
               <input
-                id="password"
-                name="password"
+                id="newPassword"
+                name="newPassword"
                 type="password"
                 minLength={6}
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 className="form-input"
                 placeholder="At least 6 characters"
               />

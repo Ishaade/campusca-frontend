@@ -19,8 +19,9 @@ import TakeQuiz from './components/quiz/TakeQuiz';
 import QuizList from './components/quiz/QuizList';
 import QuizResults from './components/quiz/QuizResults';
 import QuizManagement from './components/quiz/QuizManagement';
+import TeacherQuizAttempts from './components/quiz/TeacherQuizAttempts';
+import TeacherAttemptDetail from './components/quiz/TeacherAttemptDetail';
 import QuizAnalytics from './components/analytics/QuizAnalytics';
-import MigrationHelper from './components/quiz/MigrationHelper';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -35,7 +36,14 @@ function App() {
             {/* Public Auth Routes */}
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/register" element={<Register />} />
-            <Route path="/auth/change-password" element={<ChangePassword />} />
+            <Route
+              path="/auth/change-password"
+              element={
+                <ProtectedRoute role="student">
+                  <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/admin/users" element={
               <ProtectedRoute role="admin">
                 <AdminUserManagement />
@@ -112,17 +120,21 @@ function App() {
                 <QuizManagement />
               </ProtectedRoute>
             } />
+            <Route path="/room/:roomId/quiz/:quizId/attempts" element={
+              <ProtectedRoute role="teacher">
+                <TeacherQuizAttempts />
+              </ProtectedRoute>
+            } />
+            <Route path="/room/:roomId/quiz/:quizId/attempts/:attemptId" element={
+              <ProtectedRoute role="teacher">
+                <TeacherAttemptDetail />
+              </ProtectedRoute>
+            } />
             
             {/* Analytics Routes */}
             <Route path="/room/:roomId/analytics" element={
               <ProtectedRoute role="teacher">
                 <QuizAnalytics />
-              </ProtectedRoute>
-            } />
-            {/* Migration Helper (teacher-only) */}
-            <Route path="/teacher/migration" element={
-              <ProtectedRoute role="teacher">
-                <MigrationHelper />
               </ProtectedRoute>
             } />
           </Routes>

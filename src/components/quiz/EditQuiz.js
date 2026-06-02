@@ -30,12 +30,19 @@ function EditQuiz() {
     const loadQuiz = async () => {
       try {
         setLoading(true);
-        const data = await apiRequest(`/api/quizzes/${quizId}`);
+        const resp = await apiRequest(`/api/quizzes/${quizId}`);
+        const data = (resp && (resp.quiz ? resp.quiz : resp)) || null;
 
         if (!data) {
           setError('Quiz not found');
           return;
         }
+
+        // questions may be JSON string depending on backend/db
+        if (typeof data.questions === 'string') {
+          try { data.questions = JSON.parse(data.questions); } catch (e) { data.questions = []; }
+        }
+        if (!Array.isArray(data.questions)) data.questions = data.questions || [];
 
         // Ensure questions have courseOutcome and bloomsTaxonomy fields (for backward compatibility)
         const questionsWithMetadata = (data.questions || []).map(q => ({
@@ -59,12 +66,12 @@ function EditQuiz() {
         setFormData({
           title: data.title || '',
           description: data.description || '',
-          timeLimit: data.timeLimit || 30,
-          scheduledStart: formatDateTimeLocal(data.scheduledStart),
-          scheduledEnd: formatDateTimeLocal(data.scheduledEnd),
-          attemptsAllowed: data.attemptsAllowed || 1,
-          shuffleQuestions: !!data.shuffleQuestions,
-          shuffleOptions: !!data.shuffleOptions,
+          timeLimit: data.timeLimit ?? data.time_limit ?? 30,
+          scheduledStart: formatDateTimeLocal(data.scheduledStart ?? data.scheduled_start),
+          scheduledEnd: formatDateTimeLocal(data.scheduledEnd ?? data.scheduled_end),
+          attemptsAllowed: data.attemptsAllowed ?? data.attempts_allowed ?? 1,
+          shuffleQuestions: !!(data.shuffleQuestions ?? data.shuffle_questions),
+          shuffleOptions: !!(data.shuffleOptions ?? data.shuffle_options),
           questions: questionsWithMetadata
         });
       } catch (err) {
@@ -190,8 +197,8 @@ function EditQuiz() {
         title: formData.title,
         description: formData.description,
         timeLimit: formData.timeLimit,
-        scheduledStart: formData.scheduledStart ? new Date(formData.scheduledStart).toISOString() : null,
-        scheduledEnd: formData.scheduledEnd ? new Date(formData.scheduledEnd).toISOString() : null,
+        scheduledStart: formData.scheduledStart ? new Date(formData.scheduledStart).toISOString() : '',
+        scheduledEnd: formData.scheduledEnd ? new Date(formData.scheduledEnd).toISOString() : '',
         attemptsAllowed: formData.attemptsAllowed,
         shuffleQuestions: !!formData.shuffleQuestions,
         shuffleOptions: !!formData.shuffleOptions,
@@ -212,7 +219,14 @@ function EditQuiz() {
       }, 2000);
 
     } catch (err) {
-      setError('Failed to update quiz. Please try again.');
+      if (err?.details && Array.isArray(err.details)) {
+        const msgs = err.details
+          .map(d => d.message || (d.path ? `${d.path.join('.')} failed` : String(d)))
+          .slice(0, 5);
+        setError(`Failed to update quiz: ${msgs.join('; ')}`);
+      } else {
+        setError(err?.message || 'Failed to update quiz. Please try again.');
+      }
     } finally {
       setSaving(false);
     }

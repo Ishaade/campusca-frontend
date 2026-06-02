@@ -87,6 +87,25 @@ function AdminUserManagement() {
     }
   };
 
+  const handleSetPassword = async (targetUser) => {
+    const newPassword = window.prompt(`Set a new password for ${targetUser.email} (min 6 chars):`);
+    if (!newPassword) return;
+    if (newPassword.length < 6) {
+      setListError('Password must be at least 6 characters.');
+      return;
+    }
+
+    setListError('');
+    try {
+      await apiRequest(`/api/auth/admin/users/${targetUser.id}/set-password`, {
+        method: 'POST',
+        body: JSON.stringify({ newPassword })
+      });
+    } catch (err) {
+      setListError(err?.message || 'Failed to set password.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-6">
@@ -223,7 +242,7 @@ function AdminUserManagement() {
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Name</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Email</th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">Created</th>
-                    <th className="text-right p-3 text-sm font-semibold text-gray-700">Action</th>
+                    <th className="text-right p-3 text-sm font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -235,13 +254,22 @@ function AdminUserManagement() {
                         {item.created_at ? new Date(item.created_at).toLocaleString() : '-'}
                       </td>
                       <td className="p-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(item)}
-                          className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-sm"
-                        >
-                          Remove
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSetPassword(item)}
+                            className="px-3 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-white text-sm"
+                          >
+                            Set Password
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(item)}
+                            className="px-3 py-1 rounded bg-red-600 hover:bg-red-700 text-white text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

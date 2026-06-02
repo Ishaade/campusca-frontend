@@ -106,10 +106,8 @@ function Login() {
             </div>
 
             {formData.role === 'student' && (
-              <p className="text-sm text-right mt-2">
-                <Link to="/auth/change-password" className="text-blue-600 hover:text-blue-500 font-medium">
-                  Change password
-                </Link>
+              <p className="text-sm text-right mt-2 text-gray-600">
+                Sign in first, then change password from your dashboard.
               </p>
             )}
 

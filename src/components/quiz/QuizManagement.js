@@ -13,7 +13,8 @@ function QuizManagement() {
     const load = async () => {
       try {
         setLoading(true);
-        const roomQuizzes = await apiRequest(`/api/quizzes/rooms/${roomId}`);
+        const roomQuizzesResp = await apiRequest(`/api/quizzes/rooms/${roomId}`);
+        const roomQuizzes = (roomQuizzesResp && (Array.isArray(roomQuizzesResp.quizzes) ? roomQuizzesResp.quizzes : Array.isArray(roomQuizzesResp) ? roomQuizzesResp : [])) || [];
 
         const quizzesWithStats = await Promise.all((roomQuizzes || []).map(async (quiz) => {
           let attempts = [];
@@ -77,6 +78,10 @@ function QuizManagement() {
 
   const handleEditQuiz = (quizId) => {
     navigate(`/room/${roomId}/edit-quiz/${quizId}`);
+  };
+
+  const handleViewAttempts = (quizId) => {
+    navigate(`/room/${roomId}/quiz/${quizId}/attempts`);
   };
 
   if (loading) {
@@ -185,6 +190,12 @@ function QuizManagement() {
                       className="btn btn-secondary text-sm"
                     >
                       Edit
+                    </button>
+                    <button
+                      onClick={() => handleViewAttempts(quiz.id)}
+                      className="btn btn-secondary text-sm"
+                    >
+                      Results
                     </button>
                     <button
                       onClick={() => handleDeleteQuiz(quiz.id)}

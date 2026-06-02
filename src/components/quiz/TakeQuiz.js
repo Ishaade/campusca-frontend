@@ -26,6 +26,12 @@ function TakeQuiz() {
   const timeLeftRef = useRef(timeLeft);
   timeLeftRef.current = timeLeft;
 
+  const normalizeBool = (value) => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') return value.toLowerCase() === 'true' || value === '1';
+    return Boolean(value);
+  };
+
   useEffect(() => {
     // Load quiz and attempt state from API and initialize answers
     const load = async () => {
@@ -121,7 +127,8 @@ function TakeQuiz() {
 
         // Try to fetch room code
         try {
-          const room = await apiRequest(`/api/rooms/${roomId}`);
+          const roomResp = await apiRequest(`/api/rooms/${roomId}`);
+          const room = roomResp?.room || roomResp;
           if (room?.code) setRoomCode(room.code);
         } catch (e) {
           // ignore
@@ -131,11 +138,41 @@ function TakeQuiz() {
         const initialAnswers = {};
         quizWithPrep.questions.forEach(q => { initialAnswers[q.id] = ''; });
 
+        // Restore local autosave (crash/reload protection)
+        try {
+          const autosaveKey = `quiz_autosave_${user.id}_${quizId}`;
+          const raw = localStorage.getItem(autosaveKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.answers && typeof parsed.answers === 'object') {
+              Object.keys(parsed.answers).forEach((k) => {
+                if (k in initialAnswers) initialAnswers[k] = parsed.answers[k];
+              });
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+
         // Attempt to restore server-side draft for this user's latest attempt if any
         const userAttempts = attempts.filter(a => String(a.studentId || a.student_id) === String(user?.id));
         const latestDraft = userAttempts.length ? userAttempts[userAttempts.length - 1] : null;
         if (latestDraft && latestDraft.answers) {
-          setAnswers(latestDraft.answers);
+          // answers may be array [{questionId,response}] or object map
+          let restored = latestDraft.answers;
+          if (typeof restored === 'string') {
+            try { restored = JSON.parse(restored); } catch (e) { restored = null; }
+          }
+          if (Array.isArray(restored)) {
+            const map = {};
+            restored.forEach(item => { if (item?.questionId) map[item.questionId] = item.response; });
+            restored = map;
+          }
+          if (restored && typeof restored === 'object') {
+            setAnswers({ ...initialAnswers, ...restored });
+          } else {
+            setAnswers(initialAnswers);
+          }
         } else {
           setAnswers(initialAnswers);
         }
@@ -161,7 +198,7 @@ function TakeQuiz() {
           body: JSON.stringify({ roomId })
         });
         // Accept a variety of shapes: { id }, { attemptId }, or returned object
-        const id = res?.id || res?.attemptId || res?.attempt?.id || null;
+        const id = res?.id || res?.attemptId || res?.attempt?.id || res?.attempt?.id || null;
         if (id) setAttemptId(id);
       } catch (err) {
         console.warn('Failed to create attempt on server, will proceed in client-only mode', err);
@@ -465,18 +502,29 @@ function TakeQuiz() {
     let earnedPoints = 0;
 
     quiz.questions.forEach(question => {
-      totalPoints += question.points;
+      totalPoints += Number(question.points) || 0;
       const userAnswer = answers[question.id];
       
       if (question.type === 'multiple-choice' || question.type === 'true-false') {
-        if (parseInt(userAnswer) === question.correctAnswer) {
-          correctAnswers++;
-          earnedPoints += question.points;
+        if (question.type === 'multiple-choice') {
+          const isCorrect = Number(userAnswer) === Number(question.correctAnswer);
+          if (isCorrect) {
+            correctAnswers++;
+            earnedPoints += Number(question.points) || 0;
+          }
+        } else {
+          const expected = normalizeBool(question.correctAnswer);
+          const provided = normalizeBool(userAnswer);
+          const isCorrect = expected === provided;
+          if (isCorrect) {
+            correctAnswers++;
+            earnedPoints += Number(question.points) || 0;
+          }
         }
       } else if (question.type === 'short-answer') {
         if (userAnswer && userAnswer.trim().length > 0) {
           correctAnswers++;
-          earnedPoints += question.points;
+          earnedPoints += Number(question.points) || 0;
         }
       }
     });
