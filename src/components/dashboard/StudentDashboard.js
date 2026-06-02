@@ -74,6 +74,13 @@ function StudentDashboard() {
     totalPoints: 0
   });
 
+  const safeDate = (value, withTime = false) => {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '—';
+    return withTime ? d.toLocaleString() : d.toLocaleDateString();
+  };
+
   useEffect(() => {
     // Load joined rooms and quiz summaries from backend and normalize fields
     (async () => {
@@ -337,7 +344,7 @@ function StudentDashboard() {
                       <div key={quiz.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium">{quiz.quizName}</p>
-                          <p className="text-sm text-gray-600">{quiz.roomName} • {new Date(quiz.completedAt).toLocaleDateString()}</p>
+                          <p className="text-sm text-gray-600">{quiz.roomName} • {safeDate(quiz.completedAt)}</p>
                         </div>
                         <div className="text-right">
                           <p className={`font-bold ${
@@ -371,7 +378,7 @@ function StudentDashboard() {
                       <div key={uq.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
                         <div>
                           <p className="font-medium text-gray-900">{uq.title}</p>
-                          <p className="text-xs text-gray-600">{uq.roomName} • Starts {new Date(uq.scheduledStart).toLocaleString()}</p>
+                          <p className="text-xs text-gray-600">{uq.roomName} • Starts {safeDate(uq.scheduledStart, true)}</p>
                         </div>
                         <button className="btn btn-primary btn-sm" onClick={() => {
                           // Resolve roomId by checking `joinedRooms` from state
@@ -439,7 +446,7 @@ function StudentDashboard() {
                     </div>
                     <div className="space-y-2 mb-4">
                       <p className="text-sm text-gray-600">
-                        Joined: {join.joinedAt ? new Date(join.joinedAt).toLocaleDateString() : '—'}
+                        Joined: {safeDate(join.joinedAt)}
                       </p>
                       <p className="text-sm text-gray-600">
                         Status: {join.status}
@@ -541,7 +548,7 @@ function StudentDashboard() {
                             </span>
                           </td>
                           <td className="py-2">{quiz.points || 0}</td>
-                          <td className="py-2">{new Date(quiz.completedAt).toLocaleDateString()}</td>
+                          <td className="py-2">{safeDate(quiz.completedAt)}</td>
                           <td className="py-2">
                             <button 
                               onClick={() => navigate(`/room/${quiz.roomId}/quiz/${quiz.quizId}/results`)}

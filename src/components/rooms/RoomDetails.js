@@ -151,8 +151,14 @@ function RoomDetails() {
                   <p className="text-gray-900">{room.maxStudents}</p>
                 </div>
                 <div>
+                  <label className="text-sm font-medium text-gray-600">Room Owner</label>
+                  <p className="text-gray-900">{room.teacherName || 'Unknown'}</p>
+                </div>
+                <div>
                   <label className="text-sm font-medium text-gray-600">Created</label>
-                  <p className="text-gray-900">{new Date(room.createdAt).toLocaleDateString()}</p>
+                  <p className="text-gray-900">
+                    {room.createdAt ? new Date(room.createdAt).toLocaleDateString() : '—'}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Settings</label>

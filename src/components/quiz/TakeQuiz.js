@@ -32,6 +32,11 @@ function TakeQuiz() {
     return Boolean(value);
   };
 
+  const normalizeText = (value) => {
+    if (value == null) return '';
+    return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
+  };
+
   useEffect(() => {
     // Load quiz and attempt state from API and initialize answers
     const load = async () => {
@@ -409,6 +414,7 @@ function TakeQuiz() {
         -moz-user-select: none !important;
         -ms-user-select: none !important;
         user-select: none !important;
+        -webkit-touch-callout: none !important;
       }
       body input,
       body textarea {
@@ -416,6 +422,7 @@ function TakeQuiz() {
         -moz-user-select: text !important;
         -ms-user-select: text !important;
         user-select: text !important;
+        -webkit-touch-callout: default !important;
       }
     `;
     document.head.appendChild(style);
@@ -556,7 +563,9 @@ function TakeQuiz() {
           }
         }
       } else if (question.type === 'short-answer') {
-        if (userAnswer && userAnswer.trim().length > 0) {
+        const provided = normalizeText(userAnswer);
+        const expected = normalizeText(question.correctAnswer || question.sampleAnswer || '');
+        if (provided && expected && provided === expected) {
           correctAnswers++;
           earnedPoints += Number(question.points) || 0;
         }

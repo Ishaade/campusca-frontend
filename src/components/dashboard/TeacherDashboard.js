@@ -63,17 +63,34 @@ function TeacherDashboard() {
 
   // Load quizzes for the teacher when the quizzes tab is opened
   const [myQuizzes, setMyQuizzes] = useState([]);
+  const safeDate = (value, withTime = false) => {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '—';
+    return withTime ? d.toLocaleString() : d.toLocaleDateString();
+  };
   useEffect(() => {
     let mounted = true;
     if (activeTab !== 'quizzes') return;
     (async () => {
       try {
         const allQuizzes = [];
+        const roomIdToName = new Map(rooms.map(r => [String(r.id), r.name]));
         for (const r of rooms) {
           try {
             const qres = await apiRequest(`/api/quizzes/rooms/${r.id}`);
             const quizzes = qres.quizzes || qres || [];
-            quizzes.forEach(q => allQuizzes.push(q));
+            quizzes.forEach(q => {
+              allQuizzes.push({
+                ...q,
+                roomId: q.roomId || q.room_id || r.id,
+                roomName: q.roomName || q.room_name || roomIdToName.get(String(q.roomId || q.room_id || r.id)) || r.name,
+                createdAt: q.createdAt || q.created_at,
+                scheduledStart: q.scheduledStart || q.scheduled_start,
+                scheduledEnd: q.scheduledEnd || q.scheduled_end,
+                timeLimit: q.timeLimit || q.time_limit
+              });
+            });
           } catch (e) {
             // ignore per-room failures
           }
@@ -197,43 +214,7 @@ function TeacherDashboard() {
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="card">
-              <h3 className="text-lg font-bold mb-4">Quick Actions</h3>
-              <div className="flex flex-wrap gap-4">
-                <button 
-                  onClick={() => navigate('/create-room')}
-                  className="btn btn-primary"
-                >
-                  Create New Room
-                </button>
-                <button 
-                  onClick={() => {
-                    // For now, redirect to first room or show message
-                    if (rooms.length > 0) {
-                      navigate(`/room/${rooms[0].id}/create-quiz`);
-                    } else {
-                      alert('Please create a room first before creating quizzes.');
-                    }
-                  }}
-                  className="btn btn-success"
-                >
-                  Create Quiz
-                </button>
-                <button 
-                  onClick={() => {
-                    if (rooms.length > 0) {
-                      navigate(`/room/${rooms[0].id}/analytics`);
-                    } else {
-                      alert('Please create a room first to view analytics.');
-                    }
-                  }}
-                  className="btn btn-secondary"
-                >
-                  View Analytics
-                </button>
-              </div>
-            </div>
+            
           </div>
         )}
 
@@ -311,29 +292,14 @@ function TeacherDashboard() {
 
         {activeTab === 'quizzes' && (
           <div>
-            <div className="flex justify-between items-center mb-6">
+            <div className="mb-6">
               <h2 className="text-xl font-bold">My Quizzes</h2>
-              <button 
-                onClick={() => {
-                  if (rooms.length > 0) {
-                    navigate(`/room/${rooms[0].id}/create-quiz`);
-                  } else {
-                    alert('Please create a room first before creating quizzes.');
-                  }
-                }}
-                className="btn btn-primary"
-              >
-                Create New Quiz
-              </button>
             </div>
             {(() => {
               if (!myQuizzes || myQuizzes.length === 0) {
                 return (
                   <div className="card">
-                    <p className="text-gray-600">No quizzes found. Create your first quiz.</p>
-                    <div className="mt-4">
-                      <button className="btn btn-primary" onClick={() => rooms.length>0 ? navigate(`/room/${rooms[0].id}/create-quiz`) : navigate('/create-room')}>Create Quiz</button>
-                    </div>
+                    <p className="text-gray-600">No quizzes found.</p>
                   </div>
                 );
               }
@@ -355,16 +321,16 @@ function TeacherDashboard() {
                     </thead>
                     <tbody>
                       {myQuizzes
-                        .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .sort((a,b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
                         .map(q => (
                         <tr key={q.id} className="border-t">
                           <td className="py-2 pr-4 font-medium text-gray-900">{q.title}</td>
-                          <td className="py-2 pr-4">{roomIdToName.get(q.roomId) || q.roomId}</td>
+                          <td className="py-2 pr-4">{q.roomName || roomIdToName.get(q.roomId) || q.roomId}</td>
                           <td className="py-2 pr-4">{q.questions?.length || 0}</td>
                           <td className="py-2 pr-4">{q.timeLimit} min</td>
                           <td className="py-2 pr-4 text-xs text-gray-600">
-                            {q.scheduledStart ? `Start: ${new Date(q.scheduledStart).toLocaleString()}` : '—'}
-                            {q.scheduledEnd ? ` \u00B7 End: ${new Date(q.scheduledEnd).toLocaleString()}` : ''}
+                            {q.scheduledStart ? `Start: ${safeDate(q.scheduledStart, true)}` : '—'}
+                            {q.scheduledEnd ? ` \u00B7 End: ${safeDate(q.scheduledEnd, true)}` : ''}
                           </td>
                           <td className="py-2 pr-4">
                             <div className="flex gap-2">

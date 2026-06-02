@@ -88,9 +88,10 @@ function EditQuiz() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const numberFields = ['timeLimit', 'attemptsAllowed'];
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: numberFields.includes(name) ? Number(value) : value
     }));
   };
 
@@ -196,10 +197,10 @@ function EditQuiz() {
       const payload = {
         title: formData.title,
         description: formData.description,
-        timeLimit: formData.timeLimit,
+        timeLimit: Number(formData.timeLimit),
         scheduledStart: formData.scheduledStart ? new Date(formData.scheduledStart).toISOString() : '',
         scheduledEnd: formData.scheduledEnd ? new Date(formData.scheduledEnd).toISOString() : '',
-        attemptsAllowed: formData.attemptsAllowed,
+        attemptsAllowed: Number(formData.attemptsAllowed),
         shuffleQuestions: !!formData.shuffleQuestions,
         shuffleOptions: !!formData.shuffleOptions,
         questions: formData.questions,

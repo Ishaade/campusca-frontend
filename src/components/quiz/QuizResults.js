@@ -95,6 +95,11 @@ function QuizResults() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, roomId, user?.id]);
 
+  const normalizeText = (value) => {
+    if (value == null) return '';
+    return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
+  };
+
   const getQuestionResult = (question, index) => {
     const questionKey = question?.id != null ? String(question.id) : String(index);
     const userAnswer = result?.answers ? result.answers[questionKey] : null;
@@ -115,9 +120,10 @@ function QuizResults() {
         pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
       }
     } else if (question.type === 'short-answer') {
-      // Backend marks short-answer as pending_review, not auto-correct.
-      isCorrect = false;
-      pointsEarned = 0;
+      const provided = normalizeText(userAnswer);
+      const expected = normalizeText(question.correctAnswer || question.sampleAnswer || '');
+      isCorrect = !!provided && !!expected && provided === expected;
+      pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
     }
 
     return { isCorrect, pointsEarned, userAnswer };

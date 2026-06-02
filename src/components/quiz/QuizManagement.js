@@ -41,6 +41,12 @@ function QuizManagement() {
 
           return {
             ...quiz,
+            scheduledStart: quiz.scheduledStart || quiz.scheduled_start,
+            scheduledEnd: quiz.scheduledEnd || quiz.scheduled_end,
+            createdAt: quiz.createdAt || quiz.created_at,
+            timeLimit: quiz.timeLimit || quiz.time_limit,
+            totalPoints: quiz.totalPoints || quiz.total_points,
+            questions: Array.isArray(quiz.questions) ? quiz.questions : [],
             completionCount: quizResults.length,
             averageScore,
             lastTaken
