@@ -110,7 +110,7 @@ function TakeQuiz() {
             const indices = q.options.map((_, idx) => idx).sort(() => Math.random() - 0.5);
             const newOptions = indices.map(i => q.options[i]);
             const newCorrect = indices.indexOf(q.correctAnswer);
-            return { ...q, options: newOptions, correctAnswer: newCorrect };
+            return { ...q, options: newOptions, correctAnswer: newCorrect, optionOrder: indices };
           });
         }
 
@@ -169,7 +169,18 @@ function TakeQuiz() {
             restored = map;
           }
           if (restored && typeof restored === 'object') {
-            setAnswers({ ...initialAnswers, ...restored });
+            // Server stores canonical option indices. Convert to displayed indices for shuffled options.
+            const converted = { ...restored };
+            quizWithPrep.questions.forEach((q) => {
+              const key = String(q.id);
+              const raw = converted[key];
+              if (q.type === 'multiple-choice' && Array.isArray(q.optionOrder) && raw !== undefined && raw !== null && raw !== '') {
+                const canonical = Number(raw);
+                const displayedIdx = q.optionOrder.indexOf(canonical);
+                if (displayedIdx >= 0) converted[key] = displayedIdx;
+              }
+            });
+            setAnswers({ ...initialAnswers, ...converted });
           } else {
             setAnswers(initialAnswers);
           }
@@ -208,6 +219,29 @@ function TakeQuiz() {
     startAttempt();
   }, [quiz, user, apiRequest, roomId]);
 
+  const buildAnswerArrayForServer = useCallback(() => {
+    return Object.keys(answers || {}).map((qid) => {
+      const question = (quiz?.questions || []).find((q) => String(q.id) === String(qid));
+      let response = answers[qid];
+
+      if (
+        question &&
+        question.type === 'multiple-choice' &&
+        Array.isArray(question.optionOrder) &&
+        response !== undefined &&
+        response !== null &&
+        response !== ''
+      ) {
+        const displayedIndex = Number(response);
+        if (!Number.isNaN(displayedIndex) && displayedIndex >= 0 && displayedIndex < question.optionOrder.length) {
+          response = question.optionOrder[displayedIndex];
+        }
+      }
+
+      return { questionId: qid, response };
+    });
+  }, [answers, quiz]);
+
   // Autosave answers to server (and fallback to localStorage)
   useEffect(() => {
     if (!quiz || !user) return;
@@ -217,8 +251,8 @@ function TakeQuiz() {
     const doAutosave = async () => {
         if (attemptId) {
         try {
-          // convert answers map -> array of { questionId, response }
-          const answersArray = Object.keys(answers || {}).map(qid => ({ questionId: qid, response: answers[qid] }));
+          // convert answers map -> canonical array for server scoring
+          const answersArray = buildAnswerArrayForServer();
           await apiRequest(`/api/quizzes/${quiz.id}/attempts/${attemptId}`, {
             method: 'PATCH',
             body: JSON.stringify({ answers: answersArray, elapsedSeconds: (quiz.timeLimit * 60) - timeLeftRef.current })
@@ -246,7 +280,7 @@ function TakeQuiz() {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [answers, quiz, user, attemptId, apiRequest]);
+  }, [answers, quiz, user, attemptId, apiRequest, buildAnswerArrayForServer]);
 
   // Handle security violations - defined early so it can be used in useEffect hooks
   const handleSecurityViolation = useCallback((message) => {
@@ -461,8 +495,8 @@ function TakeQuiz() {
 
       if (id) {
         // server-side submit
-        // convert answers map -> array for server
-        const answersArray = Object.keys(answers || {}).map(qid => ({ questionId: qid, response: answers[qid] }));
+        // convert answers map -> canonical array for server scoring
+        const answersArray = buildAnswerArrayForServer();
         const submitRes = await apiRequest(`/api/quizzes/${quiz.id}/attempts/${id}/submit`, {
           method: 'POST',
           body: JSON.stringify({ answers: answersArray, elapsedSeconds: timeSpent })
@@ -569,7 +603,7 @@ function TakeQuiz() {
     }
 
     setSubmitted(true);
-  }, [submitted, quiz, answers, user, timeLeft, attemptId, apiRequest, roomId]);
+  }, [submitted, quiz, answers, user, timeLeft, attemptId, apiRequest, roomId, buildAnswerArrayForServer]);
 
   // Auto-submit when triggered by security violations
   useEffect(() => {
