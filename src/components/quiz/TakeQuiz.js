@@ -447,6 +447,15 @@ function TakeQuiz() {
     };
   }, [quiz, submitted, handleSecurityViolation]);
 
+  // After submit, briefly show confirmation then redirect to results page.
+  useEffect(() => {
+    if (!submitted || !quiz) return;
+    const timer = setTimeout(() => {
+      navigate(`/room/${roomId}/quiz/${quiz.id}/results`);
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, [submitted, quiz, navigate, roomId]);
+
   // Security: Detect tab switching using Page Visibility API
   useEffect(() => {
     if (!quiz || submitted) return;
@@ -760,53 +769,17 @@ function TakeQuiz() {
     );
   }
 
-  if (submitted && score) {
+  if (submitted) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container py-8">
           <div className="max-w-2xl mx-auto">
             <div className="card text-center">
-              <div className="text-6xl mb-4">
-                {score.finalScore >= 80 ? '🎉' : score.finalScore >= 60 ? '👍' : '📚'}
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">Quiz Completed!</h1>
-              <h2 className="text-xl text-gray-600 mb-8">{quiz.title}</h2>
-              
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{score.finalScore}%</div>
-                  <div className="text-sm text-blue-800">Final Score</div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{score.correctAnswers}/{score.totalQuestions}</div>
-                  <div className="text-sm text-green-800">Correct Answers</div>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{score.earnedPoints}/{score.totalPoints}</div>
-                  <div className="text-sm text-purple-800">Points Earned</div>
-                </div>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-yellow-600">{formatTime(score.timeSpent)}</div>
-                  <div className="text-sm text-yellow-800">Time Taken</div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {roomCode ? (
-                  <button
-                    onClick={() => navigate(`/room/${roomCode}`)}
-                    className="btn btn-primary w-full"
-                  >
-                    Back to Room
-                  </button>
-                ) : null}
-                <button
-                  onClick={() => navigate('/student')}
-                  className="btn btn-secondary w-full"
-                >
-                  Student Dashboard
-                </button>
-              </div>
+              <div className="text-6xl mb-4">✅</div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-3">Quiz Submitted</h1>
+              <h2 className="text-xl text-gray-600 mb-3">{quiz.title}</h2>
+              <p className="text-gray-700 mb-6">Test has been attempted successfully.</p>
+              <p className="text-sm text-gray-500">Redirecting to result page...</p>
             </div>
           </div>
         </div>
