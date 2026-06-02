@@ -1,0 +1,9 @@
+{
+  "build": {
+    "env": {
+      "CI": "false",
+      "DISABLE_ESLINT_PLUGIN": "true"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}

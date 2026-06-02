@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { checkQuizAvailability } from '../../utils/quizUtils';
@@ -23,6 +23,8 @@ function TakeQuiz() {
   const [warningMessage, setWarningMessage] = useState('');
   const [isTabActive, setIsTabActive] = useState(true);
   const [autoSubmitTrigger, setAutoSubmitTrigger] = useState(false);
+  const timeLeftRef = useRef(timeLeft);
+  timeLeftRef.current = timeLeft;
 
   useEffect(() => {
     // Load quiz and attempt state from API and initialize answers
@@ -182,7 +184,7 @@ function TakeQuiz() {
           const answersArray = Object.keys(answers || {}).map(qid => ({ questionId: qid, response: answers[qid] }));
           await apiRequest(`/api/quizzes/${quiz.id}/attempts/${attemptId}`, {
             method: 'PATCH',
-            body: JSON.stringify({ answers: answersArray, elapsedSeconds: (quiz.timeLimit * 60) - timeLeft })
+            body: JSON.stringify({ answers: answersArray, elapsedSeconds: (quiz.timeLimit * 60) - timeLeftRef.current })
           });
         } catch (err) {
           // fallback to localStorage
