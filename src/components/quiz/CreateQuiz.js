@@ -137,6 +137,9 @@ function CreateQuiz() {
       }
       
       // Create quiz via API
+      const scheduledStartIso = formData.scheduledStart ? new Date(formData.scheduledStart).toISOString() : '';
+      const scheduledEndIso = formData.scheduledEnd ? new Date(formData.scheduledEnd).toISOString() : '';
+
       const payload = {
         title: formData.title,
         description: formData.description,
@@ -145,8 +148,8 @@ function CreateQuiz() {
         shuffleQuestions: !!formData.shuffleQuestions,
         shuffleOptions: !!formData.shuffleOptions,
         // Zod schema expects a string (or empty string) for scheduled times — avoid sending `null`.
-        scheduledStart: formData.scheduledStart || '',
-        scheduledEnd: formData.scheduledEnd || '',
+        scheduledStart: scheduledStartIso,
+        scheduledEnd: scheduledEndIso,
         questions: formData.questions,
         totalPoints: formData.questions.reduce((sum, q) => sum + (Number(q.points) || 0), 0)
       };
