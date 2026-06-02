@@ -100,6 +100,24 @@ function QuizResults() {
     return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
   };
 
+  const safeDateTime = (value) => {
+    if (!value) return '—';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
+  };
+
+  const normalizeTrueFalseIndex = (value) => {
+    // App convention: 0 => True, 1 => False
+    if (typeof value === 'boolean') return value ? 0 : 1;
+    if (typeof value === 'number') return value === 0 ? 0 : 1;
+    if (typeof value === 'string') {
+      const raw = value.trim().toLowerCase();
+      if (raw === '0' || raw === 'true') return 0;
+      if (raw === '1' || raw === 'false') return 1;
+    }
+    return 1;
+  };
+
   const getQuestionResult = (question, index) => {
     const questionKey = question?.id != null ? String(question.id) : String(index);
     const userAnswer = result?.answers ? result.answers[questionKey] : null;
@@ -111,12 +129,7 @@ function QuizResults() {
         isCorrect = Number(userAnswer) === Number(question.correctAnswer);
         pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
       } else {
-        const normalizeBool = (value) => {
-          if (typeof value === 'boolean') return value;
-          if (typeof value === 'string') return value.toLowerCase() === 'true' || value === '1';
-          return Boolean(value);
-        };
-        isCorrect = normalizeBool(userAnswer) === normalizeBool(question.correctAnswer);
+        isCorrect = normalizeTrueFalseIndex(userAnswer) === normalizeTrueFalseIndex(question.correctAnswer);
         pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
       }
     } else if (question.type === 'short-answer') {
@@ -245,7 +258,7 @@ function QuizResults() {
             <div className="mt-6 pt-6 border-t">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
                 <span>Completed on</span>
-                <span>{new Date(result.completedAt).toLocaleString()}</span>
+                <span>{safeDateTime(result.completedAt)}</span>
               </div>
             </div>
           </div>
@@ -309,9 +322,7 @@ function QuizResults() {
                           <p className="text-sm font-medium text-gray-700 mb-1">Your Answer:</p>
                           <div className="p-2 bg-white rounded border">
                             {(() => {
-                              const v = questionResult.userAnswer;
-                              const b = typeof v === 'boolean' ? v : typeof v === 'string' ? (v.toLowerCase() === 'true' || v === '1') : Boolean(v);
-                              return b ? 'True' : 'False';
+                              return normalizeTrueFalseIndex(questionResult.userAnswer) === 0 ? 'True' : 'False';
                             })()}
                           </div>
                         </div>
@@ -320,9 +331,7 @@ function QuizResults() {
                             <p className="text-sm font-medium text-green-700 mb-1">Correct Answer:</p>
                             <div className="p-2 bg-green-100 rounded border border-green-300">
                               {(() => {
-                                const v = question.correctAnswer;
-                                const b = typeof v === 'boolean' ? v : typeof v === 'string' ? (v.toLowerCase() === 'true' || v === '1') : Boolean(v);
-                                return b ? 'True' : 'False';
+                                return normalizeTrueFalseIndex(question.correctAnswer) === 0 ? 'True' : 'False';
                               })()}
                             </div>
                           </div>

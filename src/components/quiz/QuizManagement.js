@@ -8,6 +8,12 @@ function QuizManagement() {
   const { apiRequest } = useAuth();
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const safeDate = (value, withTime = false) => {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '—';
+    return withTime ? d.toLocaleString() : d.toLocaleDateString();
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -35,8 +41,11 @@ function QuizManagement() {
           const averageScore = quizResults.length > 0
             ? Math.round(quizResults.reduce((sum, r) => sum + (r.score || 0), 0) / quizResults.length)
             : 0;
-          const lastTaken = quizResults.length > 0
-            ? Math.max(...quizResults.map(r => new Date(r.completedAt).getTime()))
+          const validTakenTimestamps = quizResults
+            .map(r => new Date(r.completedAt).getTime())
+            .filter(ts => Number.isFinite(ts));
+          const lastTaken = validTakenTimestamps.length > 0
+            ? Math.max(...validTakenTimestamps)
             : null;
 
           return {
@@ -156,12 +165,12 @@ function QuizManagement() {
                     <div className="flex flex-wrap gap-2 mb-3">
                       {quiz.scheduledStart && (
                         <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                          Starts: {new Date(quiz.scheduledStart).toLocaleString()}
+                          Starts: {safeDate(quiz.scheduledStart, true)}
                         </span>
                       )}
                       {quiz.scheduledEnd && (
                         <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                          Ends: {new Date(quiz.scheduledEnd).toLocaleString()}
+                          Ends: {safeDate(quiz.scheduledEnd, true)}
                         </span>
                       )}
                     </div>
@@ -230,12 +239,12 @@ function QuizManagement() {
                     </div>
                     <div>
                       <span className="text-gray-500">Created:</span>
-                      <span className="ml-1 font-medium">{new Date(quiz.createdAt).toLocaleDateString()}</span>
+                      <span className="ml-1 font-medium">{safeDate(quiz.createdAt)}</span>
                     </div>
                     <div>
                       <span className="text-gray-500">Last Taken:</span>
                       <span className="ml-1 font-medium">
-                        {quiz.lastTaken ? new Date(quiz.lastTaken).toLocaleDateString() : 'Never'}
+                        {quiz.lastTaken ? safeDate(quiz.lastTaken) : 'Never'}
                       </span>
                     </div>
                   </div>

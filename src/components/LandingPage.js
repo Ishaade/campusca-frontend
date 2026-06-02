@@ -112,14 +112,14 @@ function LandingPage() {
               >
                 Sign In
               </Link>
-              <button
+              {/* <button
                 type="button"
                 disabled
                 className="bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium cursor-not-allowed"
                 title="Registration disabled"
               >
                 Registration Closed
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
@@ -376,12 +376,12 @@ function LandingPage() {
             >
               Sign In
             </Link>
-            <Link
+            {/* <Link
               to="/auth/login"
               className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-500 bg-opacity-20 hover:bg-opacity-30 sm:w-auto"
             >
               Sign In
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>
@@ -391,7 +391,7 @@ function LandingPage() {
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 md:flex md:items-center md:justify-between lg:px-8">
           <div className="flex justify-center space-x-6 md:order-2">
             <div className="text-gray-400 hover:text-gray-300">
-              📧 support@campusca.com
+              📧 campusca4@gmail.com
             </div>
           </div>
           <div className="mt-8 md:mt-0 md:order-1">

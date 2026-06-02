@@ -11,6 +11,11 @@ function TeacherQuizAttempts() {
   const [error, setError] = useState('');
   const [quiz, setQuiz] = useState(null);
   const [attempts, setAttempts] = useState([]);
+  const safeDateTime = (value) => {
+    if (!value) return '—';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
+  };
 
   useEffect(() => {
     (async () => {
@@ -109,7 +114,7 @@ function TeacherQuizAttempts() {
                         <td className="p-3 text-sm text-gray-600">{a.student_email || a.studentEmail || '—'}</td>
                         <td className="p-3 text-sm text-gray-800">{a.score ?? '—'}%</td>
                         <td className="p-3 text-sm text-gray-800">{earned} / {total}</td>
-                        <td className="p-3 text-sm text-gray-600">{submittedAt ? new Date(submittedAt).toLocaleString() : '—'}</td>
+                        <td className="p-3 text-sm text-gray-600">{safeDateTime(submittedAt)}</td>
                         <td className="p-3 text-right">
                           <button
                             className="btn btn-secondary text-sm"

@@ -11,6 +11,12 @@ function QuizList() {
   const [roomCode, setRoomCode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const safeDate = (value, withTime = false) => {
+    if (!value) return '—';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '—';
+    return withTime ? d.toLocaleString() : d.toLocaleDateString();
+  };
 
   useEffect(() => {
     // roomId is a UUID string in this app — don't require numeric
@@ -57,7 +63,7 @@ function QuizList() {
             ...quiz,
             completed: !!userResult,
             score: userResult ? userResult.score : null,
-            completedAt: userResult ? userResult.completedAt : null,
+            completedAt: userResult ? (userResult.completedAt || userResult.submittedAt || userResult.submitted_at) : null,
             attemptsByUserCount: userAttemptsForThis.length,
             availability
           };
@@ -217,7 +223,7 @@ function QuizList() {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Starts:</span>
                         <span className="font-medium text-xs">
-                          {new Date(quiz.scheduledStart).toLocaleString()}
+                          {safeDate(quiz.scheduledStart, true)}
                         </span>
                       </div>
                     )}
@@ -225,7 +231,7 @@ function QuizList() {
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Ends:</span>
                         <span className="font-medium text-xs">
-                          {new Date(quiz.scheduledEnd).toLocaleString()}
+                          {safeDate(quiz.scheduledEnd, true)}
                         </span>
                       </div>
                     )}
@@ -277,7 +283,7 @@ function QuizList() {
                           View Results
                         </button>
                         <p className="text-xs text-gray-500 text-center">
-                          Completed on {new Date(quiz.completedAt).toLocaleDateString()}
+                          Completed on {safeDate(quiz.completedAt)}
                         </p>
                       </>
                     ) : (

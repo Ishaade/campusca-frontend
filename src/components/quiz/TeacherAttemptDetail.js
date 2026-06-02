@@ -54,9 +54,26 @@ function TeacherAttemptDetail() {
   const attempt = data.attempt;
   const questionReview = data.questionReview || [];
 
+  const safeDateTime = (value) => {
+    if (!value) return '—';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
+  };
+
+  const normalizeTrueFalseIndex = (value) => {
+    // App convention: 0 => True, 1 => False
+    if (typeof value === 'boolean') return value ? 0 : 1;
+    if (typeof value === 'number') return value === 0 ? 0 : 1;
+    if (typeof value === 'string') {
+      const raw = value.trim().toLowerCase();
+      if (raw === '0' || raw === 'true') return 0;
+      if (raw === '1' || raw === 'false') return 1;
+    }
+    return 1;
+  };
+
   const formatTf = (v) => {
-    const b = typeof v === 'boolean' ? v : typeof v === 'string' ? (v.toLowerCase() === 'true' || v === '1') : Boolean(v);
-    return b ? 'True' : 'False';
+    return normalizeTrueFalseIndex(v) === 0 ? 'True' : 'False';
   };
 
   return (
@@ -82,8 +99,8 @@ function TeacherAttemptDetail() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
             <div><span className="text-gray-500">Score:</span> <span className="font-medium">{attempt?.score}%</span></div>
             <div><span className="text-gray-500">Points:</span> <span className="font-medium">{attempt?.earnedPoints} / {attempt?.totalPoints}</span></div>
-            <div><span className="text-gray-500">Started:</span> <span className="font-medium">{attempt?.startedAt ? new Date(attempt.startedAt).toLocaleString() : '—'}</span></div>
-            <div><span className="text-gray-500">Submitted:</span> <span className="font-medium">{attempt?.submittedAt ? new Date(attempt.submittedAt).toLocaleString() : '—'}</span></div>
+            <div><span className="text-gray-500">Started:</span> <span className="font-medium">{safeDateTime(attempt?.startedAt)}</span></div>
+            <div><span className="text-gray-500">Submitted:</span> <span className="font-medium">{safeDateTime(attempt?.submittedAt)}</span></div>
           </div>
         </div>
 
@@ -134,9 +151,7 @@ function TeacherAttemptDetail() {
                       <div className="text-gray-700 font-medium">Student answer</div>
                       <div className="p-2 border rounded bg-gray-50 whitespace-pre-wrap">{q.studentResponse || '—'}</div>
                     </div>
-                    <div className="text-gray-500">
-                      Note: short-answer questions are marked <span className="font-medium">pending_review</span> by design.
-                    </div>
+                    <div className="text-gray-500">Short-answer is auto-scored by exact text match.</div>
                   </div>
                 )}
               </div>

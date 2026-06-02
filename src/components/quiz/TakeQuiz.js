@@ -26,15 +26,21 @@ function TakeQuiz() {
   const timeLeftRef = useRef(timeLeft);
   timeLeftRef.current = timeLeft;
 
-  const normalizeBool = (value) => {
-    if (typeof value === 'boolean') return value;
-    if (typeof value === 'string') return value.toLowerCase() === 'true' || value === '1';
-    return Boolean(value);
-  };
-
   const normalizeText = (value) => {
     if (value == null) return '';
     return String(value).trim().toLowerCase().replace(/\s+/g, ' ');
+  };
+
+  const normalizeTrueFalseIndex = (value) => {
+    // App convention: 0 => True, 1 => False
+    if (typeof value === 'boolean') return value ? 0 : 1;
+    if (typeof value === 'number') return value === 0 ? 0 : 1;
+    if (typeof value === 'string') {
+      const raw = value.trim().toLowerCase();
+      if (raw === '0' || raw === 'true') return 0;
+      if (raw === '1' || raw === 'false') return 1;
+    }
+    return 1;
   };
 
   useEffect(() => {
@@ -554,8 +560,8 @@ function TakeQuiz() {
             earnedPoints += Number(question.points) || 0;
           }
         } else {
-          const expected = normalizeBool(question.correctAnswer);
-          const provided = normalizeBool(userAnswer);
+          const expected = normalizeTrueFalseIndex(question.correctAnswer);
+          const provided = normalizeTrueFalseIndex(userAnswer);
           const isCorrect = expected === provided;
           if (isCorrect) {
             correctAnswers++;
