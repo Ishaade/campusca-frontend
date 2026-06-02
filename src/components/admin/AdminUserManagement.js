@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -23,7 +23,7 @@ function AdminUserManagement() {
     [activeRole]
   );
 
-  const loadUsers = async (role) => {
+  const loadUsers = useCallback(async (role) => {
     setListLoading(true);
     setListError('');
     try {
@@ -34,11 +34,11 @@ function AdminUserManagement() {
     } finally {
       setListLoading(false);
     }
-  };
+  }, [apiRequest]);
 
   useEffect(() => {
     loadUsers(activeRole);
-  }, [activeRole]);
+  }, [activeRole, loadUsers]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({

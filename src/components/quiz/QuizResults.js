@@ -91,6 +91,7 @@ function QuizResults() {
     };
 
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, roomId, user?.id]);
 
   const getQuestionResult = (question) => {

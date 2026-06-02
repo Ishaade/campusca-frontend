@@ -76,6 +76,7 @@ function EditQuiz() {
     };
 
     loadQuiz();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, roomId]);
 
   const handleChange = (e) => {

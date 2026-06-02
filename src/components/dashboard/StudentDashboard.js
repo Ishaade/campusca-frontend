@@ -131,6 +131,7 @@ function StudentDashboard() {
         setJoinedRooms([]);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const [recentQuizzes, setRecentQuizzes] = useState([]);
@@ -168,6 +169,7 @@ function StudentDashboard() {
         setUpcomingQuizzes([]);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, joinedRooms]);
 
   return (

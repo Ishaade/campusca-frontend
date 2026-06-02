@@ -162,6 +162,7 @@ export default function MigrationHelper() {
 
       <div className="mb-4">
         <strong>Counts:</strong> Quizzes: {counts.quizzes} — Results: {counts.results}
+        <div className="text-sm text-gray-600 mt-1">Status: {status}</div>
       </div>
 
       <div className="bg-gray-50 p-4 rounded border h-64 overflow-auto">

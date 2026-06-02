@@ -31,6 +31,7 @@ function RoomAccess() {
         setLoading(false);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomCode, user?.id]);
 
   const handleLeaveRoom = () => {

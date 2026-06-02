@@ -2,15 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Utility function to normalize room ID for comparison
-const normalizeRoomId = (id) => {
-  if (typeof id === 'string') {
-    const parsed = parseInt(id);
-    return isNaN(parsed) ? id : parsed;
-  }
-  return id;
-};
-
 function QuizManagement() {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -64,6 +55,7 @@ function QuizManagement() {
     };
 
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
   const handleDeleteQuiz = (quizId) => {

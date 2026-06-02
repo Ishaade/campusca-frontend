@@ -3,15 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { checkQuizAvailability } from '../../utils/quizUtils';
 
-// Utility function to normalize room ID for comparison
-const normalizeRoomId = (id) => {
-  if (typeof id === 'string') {
-    const parsed = parseInt(id);
-    return isNaN(parsed) ? id : parsed;
-  }
-  return id;
-};
-
 function TakeQuiz() {
   const { roomId, quizId } = useParams();
   const { user, apiRequest } = useAuth();

@@ -3,15 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { checkQuizAvailability } from '../../utils/quizUtils';
 
-// Utility function to normalize room ID for comparison
-const normalizeRoomId = (id) => {
-  if (typeof id === 'string') {
-    const parsed = parseInt(id);
-    return isNaN(parsed) ? id : parsed;
-  }
-  return id;
-};
-
 function QuizList() {
   const { roomId } = useParams();
   const { user, apiRequest } = useAuth();
@@ -88,6 +79,7 @@ function QuizList() {
     }, 60000);
 
     return () => clearInterval(availabilityInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, user?.id]);
 
   const handleTakeQuiz = (quizId) => {

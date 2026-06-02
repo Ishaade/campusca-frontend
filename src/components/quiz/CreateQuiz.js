@@ -2,15 +2,6 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
-// Utility function to normalize room ID for comparison
-const normalizeRoomId = (id) => {
-  if (typeof id === 'string') {
-    const parsed = parseInt(id);
-    return isNaN(parsed) ? id : parsed;
-  }
-  return id;
-};
-
 function CreateQuiz() {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -126,16 +117,6 @@ function CreateQuiz() {
         return;
       }
 
-      // Fetch room info from backend to get room code/name
-      const normalizedRoomId = normalizeRoomId(roomId);
-      let foundRoom = null;
-      try {
-        const roomResp = await apiRequest(`/api/rooms/${roomId}`);
-        foundRoom = roomResp.room || roomResp;
-      } catch (e) {
-        // ignore — roomName/code may be null
-      }
-      
       // Validate schedule if provided
       if (formData.scheduledStart && formData.scheduledEnd) {
         const startDate = new Date(formData.scheduledStart);
