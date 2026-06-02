@@ -61,12 +61,12 @@ function QuizResults() {
             normalized.completedAt = a.submitted_at || a.submittedAt || a.submittedAt || a.submitted_at;
             normalized.startedAt = a.started_at || a.startedAt || a.started_at;
             // unify earned points/points
-            normalized.points = a.earned_points || a.earnedPoints || a.points || 0;
+            normalized.points = a.earned_points ?? a.earnedPoints ?? a.points ?? 0;
             normalized.elapsedSeconds = a.elapsed_seconds || a.elapsedSeconds || a.elapsed_seconds || null;
             // answers may be stored as array [{questionId,response}] or as object map
             if (Array.isArray(a.answers)) {
               const map = {};
-              a.answers.forEach(item => { if (item && item.questionId) map[item.questionId] = item.response; });
+              a.answers.forEach(item => { if (item && item.questionId != null) map[String(item.questionId)] = item.response; });
               normalized.answers = map;
             }
             return normalized;
@@ -95,8 +95,9 @@ function QuizResults() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, roomId, user?.id]);
 
-  const getQuestionResult = (question) => {
-    const userAnswer = result?.answers ? result.answers[question.id] : null;
+  const getQuestionResult = (question, index) => {
+    const questionKey = question?.id != null ? String(question.id) : String(index);
+    const userAnswer = result?.answers ? result.answers[questionKey] : null;
     let isCorrect = false;
     let pointsEarned = 0;
 
@@ -114,9 +115,9 @@ function QuizResults() {
         pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
       }
     } else if (question.type === 'short-answer') {
-      // For short answer, check if answer was provided
-      isCorrect = userAnswer && userAnswer.trim().length > 0;
-      pointsEarned = isCorrect ? Number(question.points) || 0 : 0;
+      // Backend marks short-answer as pending_review, not auto-correct.
+      isCorrect = false;
+      pointsEarned = 0;
     }
 
     return { isCorrect, pointsEarned, userAnswer };
@@ -217,7 +218,7 @@ function QuizResults() {
               <div className="bg-green-50 p-4 rounded-lg text-center">
                 <div className="text-2xl font-bold text-green-600">
                   {quiz.questions.filter((q, idx) => {
-                    const res = getQuestionResult(q);
+                    const res = getQuestionResult(q, idx);
                     return res.isCorrect;
                   }).length}/{quiz.questions.length}
                 </div>
@@ -248,7 +249,7 @@ function QuizResults() {
             <h3 className="text-xl font-bold text-gray-900 mb-6">Question Review</h3>
             <div className="space-y-6">
               {quiz.questions.map((question, index) => {
-                const questionResult = getQuestionResult(question);
+                const questionResult = getQuestionResult(question, index);
                 return (
                   <div
                     key={question.id}
